@@ -87,8 +87,33 @@
   progress.addEventListener('input', () => {
     if (Number.isFinite(audio.duration) && audio.duration>0) audio.currentTime=Number(progress.value)/100*audio.duration;
   });
-  try { const stored = Number(localStorage.getItem('blog-music-volume')); if(Number.isFinite(stored)&&stored>=0&&stored<=1) volume.value=stored; } catch (_) {}
-  audio.volume=Number(volume.value);
+  
+const DEFAULT_VOLUME = 0.6;
+
+try {
+  const stored = localStorage.getItem('blog-music-volume');
+
+  if (stored !== null) {
+    const savedVolume = Number(stored);
+
+    if (
+      Number.isFinite(savedVolume) &&
+      savedVolume >= 0 &&
+      savedVolume <= 1
+    ) {
+      volume.value = String(savedVolume);
+    } else {
+      volume.value = String(DEFAULT_VOLUME);
+    }
+  } else {
+    volume.value = String(DEFAULT_VOLUME);
+  }
+} catch (_) {
+  volume.value = String(DEFAULT_VOLUME);
+}
+
+audio.volume = Number(volume.value);
+
   volume.addEventListener('input', () => { audio.volume=Number(volume.value); try{localStorage.setItem('blog-music-volume',volume.value)}catch(_){} });
   audio.addEventListener('ended', () => changeTrack(1));
   audio.addEventListener('error', () => { status.textContent='音频加载失败，请检查 R2 文件是否公开可访问'; });
