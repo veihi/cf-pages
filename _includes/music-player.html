@@ -14,6 +14,19 @@
     </div>
     <div class="music-seek"><span id="music-current">0:00</span><input id="music-progress" type="range" min="0" max="100" value="0" aria-label="播放进度"><span id="music-duration">0:00</span></div>
     <label class="music-volume">音量 <input id="music-volume" type="range" min="0" max="1" step="0.05" value="0.6" aria-label="音量"></label>
+    
+<div class="music-playlist">
+  <div class="music-list-header">
+    <strong>播放列表</strong>
+    <span id="music-count"></span>
+  </div>
+  <div id="music-track-list"
+       class="music-track-list"
+       role="group"
+       aria-label="歌曲列表">
+  </div>
+</div>
+
     <div id="music-status" class="music-status" role="status" aria-live="polite"></div>
     <audio id="music-audio" preload="none"></audio>
   </section>
@@ -28,6 +41,97 @@
 .music-actions{display:flex;justify-content:center;align-items:center;gap:28px;margin:14px 0}.music-actions button{border:0;background:none;color:#3977af;font-size:23px;cursor:pointer}.music-actions #music-play{width:44px;height:44px;border-radius:50%;background:#3977af;color:#fff;font-size:18px}
 .music-seek{display:flex;align-items:center;gap:8px;font-size:11px;color:#64748b}.music-seek input{flex:1;min-width:0}.music-volume{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-top:9px;font-size:12px;color:#64748b}.music-volume input{width:92px}.music-status{min-height:1em;font-size:11px;color:#b45309;margin-top:5px}
 .blog-music input{accent-color:#3977af}@media(max-width:520px){.blog-music{right:12px;bottom:12px}.music-panel{width:min(330px,calc(100vw - 24px))}}
+
+/* 播放列表 */
+.music-playlist {
+  margin-top: 14px;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 12px;
+}
+
+.music-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.music-list-header span {
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.music-track-list {
+  max-height: 200px;
+  overflow-y: auto;
+  display: grid;
+  gap: 4px;
+}
+
+.music-track {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #334155;
+  text-align: left;
+  cursor: pointer;
+}
+
+.music-track:hover {
+  background: #f1f5f9;
+}
+
+.music-track.active {
+  background: #eaf3ff;
+  color: #3977af;
+}
+
+.music-track-number {
+  width: 22px;
+  flex-shrink: 0;
+  text-align: center;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.music-track.active .music-track-number {
+  color: #3977af;
+}
+
+.music-track-info {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+.music-track-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.music-track-artist {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.music-track:focus-visible {
+  outline: 2px solid #3977af;
+  outline-offset: -2px;
+}
+
 </style>
 <script>
 (function () {
@@ -44,29 +148,98 @@
   const current = document.getElementById('music-current');
   const volume = document.getElementById('music-volume');
   const status = document.getElementById('music-status');
+  const trackList = document.getElementById('music-track-list');
+  const trackCount = document.getElementById('music-count');
   const tracks = JSON.parse(document.getElementById('music-playlist').textContent);
   if (!tracks.length) { root.hidden = true; return; }
   let index = 0;
   let loaded = false;
   function fmt(s) { return Number.isFinite(s) ? Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0') : '0:00'; }
+  
+function renderPlaylist() {
+  trackList.replaceChildren();
+  trackCount.textContent = tracks.length + ' 首';
+
+  tracks.forEach((track, i) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'music-track';
+    button.setAttribute('aria-label',
+      '播放 ' + (track.title || '未命名歌曲'));
+
+    if (i === index) {
+      button.classList.add('active');
+      button.setAttribute('aria-current', 'true');
+    }
+
+    const number = document.createElement('span');
+    number.className = 'music-track-number';
+    number.textContent = i === index ? '♫' : String(i + 1);
+
+    const info = document.createElement('span');
+    info.className = 'music-track-info';
+
+    const name = document.createElement('span');
+    name.className = 'music-track-title';
+    name.textContent = track.title || '未命名歌曲';
+
+    const singer = document.createElement('span');
+    singer.className = 'music-track-artist';
+    singer.textContent = track.artist || '未知歌手';
+
+    info.append(name, singer);
+    button.append(number, info);
+
+    button.addEventListener('click', () => {
+      if (i === index) {
+        if (audio.paused) start();
+        return;
+      }
+      selectTrack(i);
+    });
+
+    trackList.appendChild(button);
+  });
+}
+
   function updateTrack() {
-    const track = tracks[index];
-    title.textContent = track.title || '未命名歌曲';
-    artist.textContent = track.artist || '';
-    current.textContent = '0:00'; duration.textContent = '0:00'; progress.value = 0;
-    status.textContent = '';
-  }
+  const track = tracks[index];
+  title.textContent = track.title || '未命名歌曲';
+  artist.textContent = track.artist || '';
+  current.textContent = '0:00';
+  duration.textContent = '0:00';
+  progress.value = 0;
+  status.textContent = '';
+
+  renderPlaylist();
+}
   function loadTrack() { if (loaded) return; audio.src = tracks[index].src; loaded = true; }
   async function start() {
     loadTrack();
     try { await audio.play(); status.textContent = ''; }
     catch (err) { status.textContent = '播放失败：请检查音乐地址或浏览器权限'; }
   }
-  function changeTrack(step) {
-    audio.pause(); audio.removeAttribute('src'); audio.load(); loaded = false;
-    index = (index + step + tracks.length) % tracks.length;
-    updateTrack(); start();
-  }
+  
+function selectTrack(newIndex) {
+  if (newIndex < 0 || newIndex >= tracks.length) return;
+
+  audio.pause();
+  audio.removeAttribute('src');
+  audio.load();
+  loaded = false;
+
+  index = newIndex;
+  updateTrack();
+  start();
+}
+
+function changeTrack(step) {
+  const newIndex =
+    (index + step + tracks.length) % tracks.length;
+
+  selectTrack(newIndex);
+}
+
   toggle.addEventListener('click', () => {
     panel.hidden = !panel.hidden;
     toggle.setAttribute('aria-expanded', String(!panel.hidden));
