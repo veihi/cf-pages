@@ -3,12 +3,119 @@
   {%- include head.html -%}
   <body>
     {%- include header.html -%}
-    <main class="page-content" aria-label="Content">
+    <main id="swup" class="page-content" aria-label="Content">
       <div class="wrapper">
         {{ content }}
       </div>
     </main>
     {%- include footer.html -%}
     {%- include music-player.html -%}
+    <script>
+    (function () {
+      'use strict';
+      // Only replace the article area. The Bilibili iframe lives outside it.
+      const containerId = 'swup';
+      const container = document.getElementById(containerId);
+      if (!container || !window.fetch || !window.history || !window.DOMParser) return;
+      let navigationId = 0;
+      let controller = null;
+      const cache = new Map();
+      const limit = 12;
+      const currentKey = () => location.pathname + location.search;
+      const getScroll = () => ({ x: window.scrollX, y: window.scrollY });
+      const rememberScroll = () => {
+        const state = history.state || {};
+        history.replaceState({ ...state, musicNav: true, scroll: getScroll() }, '', location.href);
+      };
+      if (!history.state || !history.state.musicNav) rememberScroll();
+      try { history.scrollRestoration = 'manual'; } catch (_) {}
+
+      function eligibleLink(a, event) {
+        if (!a || !a.href || a.hasAttribute('download') || a.hasAttribute('data-no-swup')) return false;
+        if (a.target && a.target !== '_self') return false;
+        if (a.hasAttribute('data-turbo') && a.getAttribute('data-turbo') === 'false') return false;
+        const u = new URL(a.href, location.href);
+        if (u.origin !== location.origin || !/^https?:$/.test(u.protocol)) return false;
+        if (!/^\/(?!\/)/.test(u.pathname)) return false;
+        if (/\.(?:pdf|zip|png|jpe?g|gif|webp|svg|mp3|mp4|xml|json|txt|css|js)$/i.test(u.pathname)) return false;
+        if (event && (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)) return false;
+        return true;
+      }
+
+      function cachePage(key, html) {
+        cache.delete(key);
+        cache.set(key, html);
+        if (cache.size > limit) cache.delete(cache.keys().next().value);
+      }
+
+      async function navigate(url, fromPopState, restoreScroll) {
+        const target = new URL(url, location.href);
+        const key = target.pathname + target.search;
+        if (key === currentKey() && !fromPopState) {
+          if (target.hash) document.getElementById(decodeURIComponent(target.hash.slice(1)))?.scrollIntoView();
+          return;
+        }
+        const id = ++navigationId;
+        if (controller) controller.abort();
+        controller = new AbortController();
+        const oldUrl = location.href;
+        try {
+          let html = cache.get(key);
+          if (!html) {
+            const response = await fetch(target.href, { signal: controller.signal, headers: { 'Accept': 'text/html' }, credentials: 'same-origin' });
+            if (!response.ok || !response.headers.get('content-type')?.includes('text/html')) throw new Error('not HTML');
+            html = await response.text();
+            cachePage(key, html);
+          }
+          if (id !== navigationId) return;
+          const doc = new DOMParser().parseFromString(html, 'text/html');
+          const incoming = doc.getElementById(containerId);
+          if (!incoming || !doc.querySelector('title')) throw new Error('missing layout');
+          // Preserve the player, header and footer. Replace only page content.
+          container.innerHTML = incoming.innerHTML;
+          document.title = doc.title;
+          document.documentElement.lang = doc.documentElement.lang || document.documentElement.lang;
+          // Keep canonical/description metadata in sync for client navigation.
+          for (const selector of ['link[rel="canonical"]','meta[name="description"]','meta[property="og:title"]','meta[property="og:description"]','meta[property="og:url"]']) {
+            const existing = document.head.querySelector(selector);
+            const next = doc.head.querySelector(selector);
+            if (existing && next) existing.replaceWith(next.cloneNode(true));
+            else if (existing && !next) existing.remove();
+            else if (!existing && next) document.head.appendChild(next.cloneNode(true));
+          }
+          if (!fromPopState) {
+            history.pushState({ musicNav: true, scroll: { x: 0, y: 0 } }, '', target.href);
+          }
+          if (target.hash) {
+            const fragment = decodeURIComponent(target.hash.slice(1));
+            requestAnimationFrame(() => document.getElementById(fragment)?.scrollIntoView() || window.scrollTo(0,0));
+          } else if (restoreScroll) {
+            requestAnimationFrame(() => window.scrollTo(restoreScroll.x || 0, restoreScroll.y || 0));
+          } else {
+            window.scrollTo(0, 0);
+          }
+          document.dispatchEvent(new CustomEvent('music:navigation', { detail: { url: target.href } }));
+        } catch (error) {
+          if (error.name === 'AbortError' || id !== navigationId) return;
+          // Graceful fallback for unexpected pages, scripts or network failures.
+          location.href = target.href || oldUrl;
+        }
+      }
+
+      document.addEventListener('click', function (event) {
+        const a = event.target.closest('a[href]');
+        if (!eligibleLink(a, event)) return;
+        const target = new URL(a.href, location.href);
+        if (target.pathname === location.pathname && target.search === location.search) return;
+        event.preventDefault();
+        rememberScroll();
+        navigate(target.href, false, null);
+      });
+      window.addEventListener('popstate', function (event) {
+        navigate(location.href, true, event.state && event.state.scroll);
+      });
+      window.addEventListener('pagehide', function () { if (controller) controller.abort(); });
+    })();
+    </script>
   </body>
 </html>
