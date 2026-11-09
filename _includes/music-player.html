@@ -1,0 +1,98 @@
+{%- assign music_tracks = site.data.music -%}
+{% if music_tracks and music_tracks.size > 0 %}
+<div id="blog-music" class="blog-music" aria-label="博客音乐播放器">
+  <button id="music-toggle" class="music-toggle" type="button" aria-expanded="false" aria-controls="music-panel" aria-label="展开音乐播放器">♫</button>
+  <section id="music-panel" class="music-panel" hidden>
+    <div class="music-top">
+      <div class="music-description"><strong id="music-title">博客音乐</strong><small id="music-artist">准备播放</small></div>
+      <button id="music-close" class="music-close" type="button" aria-label="收起播放器">×</button>
+    </div>
+    <div class="music-actions">
+      <button id="music-prev" type="button" aria-label="上一首">⏮</button>
+      <button id="music-play" type="button" aria-label="播放">▶</button>
+      <button id="music-next" type="button" aria-label="下一首">⏭</button>
+    </div>
+    <div class="music-seek"><span id="music-current">0:00</span><input id="music-progress" type="range" min="0" max="100" value="0" aria-label="播放进度"><span id="music-duration">0:00</span></div>
+    <label class="music-volume">音量 <input id="music-volume" type="range" min="0" max="1" step="0.05" value="0.6" aria-label="音量"></label>
+    <div id="music-status" class="music-status" role="status" aria-live="polite"></div>
+    <audio id="music-audio" preload="none"></audio>
+  </section>
+</div>
+<script id="music-playlist" type="application/json">{{ music_tracks | jsonify }}</script>
+<style>
+.blog-music{position:fixed;right:18px;bottom:18px;z-index:9999;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#263345}
+.music-toggle{width:52px;height:52px;border:0;border-radius:50%;background:#fff;color:#3977af;font-size:30px;box-shadow:0 5px 24px #0002;cursor:pointer}
+.music-panel{box-sizing:border-box;width:min(330px,calc(100vw - 36px));margin-bottom:10px;padding:16px;background:rgba(255,255,255,.97);border:1px solid #e2e8f0;border-radius:18px;box-shadow:0 10px 35px #0002;backdrop-filter:blur(14px)}
+.music-panel[hidden]{display:none}
+.music-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.music-description{display:grid;gap:3px;min-width:0}.music-description strong,.music-description small{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.music-description small{color:#64748b}.music-close{border:0;background:none;font-size:25px;line-height:1;color:#64748b;cursor:pointer}
+.music-actions{display:flex;justify-content:center;align-items:center;gap:28px;margin:14px 0}.music-actions button{border:0;background:none;color:#3977af;font-size:23px;cursor:pointer}.music-actions #music-play{width:44px;height:44px;border-radius:50%;background:#3977af;color:#fff;font-size:18px}
+.music-seek{display:flex;align-items:center;gap:8px;font-size:11px;color:#64748b}.music-seek input{flex:1;min-width:0}.music-volume{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-top:9px;font-size:12px;color:#64748b}.music-volume input{width:92px}.music-status{min-height:1em;font-size:11px;color:#b45309;margin-top:5px}
+.blog-music input{accent-color:#3977af}@media(max-width:520px){.blog-music{right:12px;bottom:12px}.music-panel{width:min(330px,calc(100vw - 24px))}}
+</style>
+<script>
+(function () {
+  'use strict';
+  const root = document.getElementById('blog-music');
+  const audio = document.getElementById('music-audio');
+  const panel = document.getElementById('music-panel');
+  const toggle = document.getElementById('music-toggle');
+  const play = document.getElementById('music-play');
+  const title = document.getElementById('music-title');
+  const artist = document.getElementById('music-artist');
+  const progress = document.getElementById('music-progress');
+  const duration = document.getElementById('music-duration');
+  const current = document.getElementById('music-current');
+  const volume = document.getElementById('music-volume');
+  const status = document.getElementById('music-status');
+  const tracks = JSON.parse(document.getElementById('music-playlist').textContent);
+  if (!tracks.length) { root.hidden = true; return; }
+  let index = 0;
+  let loaded = false;
+  function fmt(s) { return Number.isFinite(s) ? Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0') : '0:00'; }
+  function updateTrack() {
+    const track = tracks[index];
+    title.textContent = track.title || '未命名歌曲';
+    artist.textContent = track.artist || '';
+    current.textContent = '0:00'; duration.textContent = '0:00'; progress.value = 0;
+    status.textContent = '';
+  }
+  function loadTrack() { if (loaded) return; audio.src = tracks[index].src; loaded = true; }
+  async function start() {
+    loadTrack();
+    try { await audio.play(); status.textContent = ''; }
+    catch (err) { status.textContent = '播放失败：请检查音乐地址或浏览器权限'; }
+  }
+  function changeTrack(step) {
+    audio.pause(); audio.removeAttribute('src'); audio.load(); loaded = false;
+    index = (index + step + tracks.length) % tracks.length;
+    updateTrack(); start();
+  }
+  toggle.addEventListener('click', () => {
+    panel.hidden = !panel.hidden;
+    toggle.setAttribute('aria-expanded', String(!panel.hidden));
+  });
+  document.getElementById('music-close').addEventListener('click', () => {
+    panel.hidden = true; toggle.setAttribute('aria-expanded','false');
+  });
+  play.addEventListener('click', () => audio.paused ? start() : audio.pause());
+  document.getElementById('music-prev').addEventListener('click', () => changeTrack(-1));
+  document.getElementById('music-next').addEventListener('click', () => changeTrack(1));
+  audio.addEventListener('play', () => { play.textContent='Ⅱ'; play.setAttribute('aria-label','暂停'); });
+  audio.addEventListener('pause', () => { play.textContent='▶'; play.setAttribute('aria-label','播放'); });
+  audio.addEventListener('loadedmetadata', () => { duration.textContent=fmt(audio.duration); });
+  audio.addEventListener('timeupdate', () => {
+    current.textContent=fmt(audio.currentTime);
+    if (Number.isFinite(audio.duration) && audio.duration > 0) progress.value = String(audio.currentTime/audio.duration*100);
+  });
+  progress.addEventListener('input', () => {
+    if (Number.isFinite(audio.duration) && audio.duration>0) audio.currentTime=Number(progress.value)/100*audio.duration;
+  });
+  try { const stored = Number(localStorage.getItem('blog-music-volume')); if(Number.isFinite(stored)&&stored>=0&&stored<=1) volume.value=stored; } catch (_) {}
+  audio.volume=Number(volume.value);
+  volume.addEventListener('input', () => { audio.volume=Number(volume.value); try{localStorage.setItem('blog-music-volume',volume.value)}catch(_){} });
+  audio.addEventListener('ended', () => changeTrack(1));
+  audio.addEventListener('error', () => { status.textContent='音频加载失败，请检查 R2 文件是否公开可访问'; });
+  updateTrack();
+})();
+</script>
+{% endif %}

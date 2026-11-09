@@ -1,0 +1,5 @@
+# 添加自己的歌曲后，删除或替换下面的示例项。
+# src 必须是可以公开访问的 MP3 文件 URL。
+- title: "Xterfusion"
+  artist: "REDALiCE,t+pazolite"
+  src: "https://file.veihi.uk/music/REDALiCE%2Ct%2Bpazolite%20-%20Xterfusion.mp3"
