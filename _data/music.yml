@@ -1,8 +1,22 @@
-# B站视频歌单。仅添加作者/官方允许站外嵌入的视频。
-# 从 https://www.bilibili.com/video/BV... 提取 BV 号，填入 bvid。
-# page 可选：合集/多P视频中指定第几P（从 1 开始）。
-# 注意：以下是用于验证嵌入的示例视频，不是已筛选的音游/术曲。
-# 请确认示例可播放后，替换为你喜欢的官方 MV。
-- title: "Xterfusion"
-  artist: "REDALiCE × t+pazolite"
-  bvid: "BV1fEy8BoEbj"
+# 分类歌单：每个分类包含 name、icon 和 tracks。
+# 每首视频使用 B站 BV 号；page 可选（多P视频从 1 开始）。
+# 请优先选择权利人官方发布、允许站外嵌入的视频。
+- name: "音游"
+  icon: "🎮"
+  tracks:
+    - title: "Xterfusion"
+      artist: "REDALiCE × t+pazolite"
+      bvid: "BV1fEy8BoEbj"
+- name: "音游"
+  icon: "🎮"
+  tracks:
+    - title: "躯樹の墓守"
+      artist: "隣の庭は青い(庭師+Aoi)"
+      bvid: "BV1ec411o74o"
+# 添加术曲时，取消下面的注释并填入真实 BV 号。
+- name: "VOCALOID / 术力口"
+  icon: "🎤"
+  tracks:
+    - title: "兔子洞"
+      artist: "初音ミク，DECO*27"
+      bvid: "BV1aa4y1u7Ct"

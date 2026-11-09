@@ -16,7 +16,7 @@
       <button id="music-next" type="button" aria-label="下一首">下一首 ⏭</button>
     </div>
     <div class="music-playlist">
-      <div class="music-list-header"><strong>播放列表</strong><span id="music-count"></span></div>
+      <div class="music-list-header"><button id="music-back" class="music-back" type="button" hidden aria-label="返回分类">← 返回</button><strong id="music-list-title">音乐分类</strong><span id="music-count"></span></div>
       <div id="music-track-list" class="music-track-list" role="group" aria-label="歌曲列表"></div>
     </div>
     <div id="music-status" class="music-status" role="status" aria-live="polite"></div>
@@ -40,6 +40,14 @@
 .music-playlist{margin-top:13px;border-top:1px solid #e2e8f0;padding-top:12px}
 .music-list-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:13px}
 .music-list-header span{color:#94a3b8;font-size:11px}
+.music-back{border:0;background:transparent;color:#3977af;cursor:pointer;padding:3px 6px 3px 0;font-size:12px}
+.music-back[hidden]{display:none}
+.music-category{display:flex;align-items:center;gap:10px;width:100%;padding:12px 10px;border:0;border-radius:9px;background:transparent;color:#334155;text-align:left;cursor:pointer}
+.music-category:hover{background:#f1f5f9}
+.music-category-icon{font-size:19px;width:26px;text-align:center}
+.music-category-name{flex:1;font-size:13px;font-weight:500}
+.music-category-count{font-size:11px;color:#94a3b8}
+.music-category-arrow{color:#94a3b8}
 .music-track-list{max-height:200px;overflow-y:auto;display:grid;gap:4px}
 .music-track{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border:0;border-radius:9px;background:transparent;color:#334155;text-align:left;cursor:pointer}
 .music-track:hover{background:#f1f5f9}.music-track.active{background:#eaf3ff;color:#3977af}
@@ -65,9 +73,25 @@
   const status = document.getElementById('music-status');
   const trackList = document.getElementById('music-track-list');
   const trackCount = document.getElementById('music-count');
-  const rawTracks = JSON.parse(document.getElementById('music-playlist').textContent);
-  const tracks = rawTracks.filter(t => t && /^BV[0-9A-Za-z]{10}$/.test(String(t.bvid || '')) && (!t.page || (Number.isInteger(Number(t.page)) && Number(t.page) >= 1)));
-  if (!tracks.length) { root.hidden = true; return; }
+  const rawGroups = JSON.parse(document.getElementById('music-playlist').textContent);
+  const validTrack = t => t && /^BV[0-9A-Za-z]{10}$/.test(String(t.bvid || '')) &&
+    (!t.page || (Number.isInteger(Number(t.page)) && Number(t.page) >= 1));
+  // Accept both the new grouped format and the previous flat playlist.
+  const groups = (Array.isArray(rawGroups) ? rawGroups : []).map(g => {
+    if (g && Array.isArray(g.tracks)) {
+      return { name: String(g.name || '未分类'), icon: String(g.icon || '♫'), tracks: g.tracks.filter(validTrack) };
+    }
+    return null;
+  }).filter(g => g && g.tracks.length);
+  if (!groups.length) {
+    const flat = (Array.isArray(rawGroups) ? rawGroups : []).filter(validTrack);
+    if (flat.length) groups.push({ name: '全部歌曲', icon: '♫', tracks: flat });
+  }
+  if (!groups.length) { root.hidden = true; return; }
+  const tracks = groups.flatMap(g => g.tracks);
+  const back = document.getElementById('music-back');
+  const listTitle = document.getElementById('music-list-title');
+  let selectedGroup = null;
   let index = 0;
   let loaded = false;
 
@@ -75,20 +99,48 @@
     const track = tracks[index];
     title.textContent = track.title || '未命名歌曲';
     artist.textContent = track.artist || '';
-    trackCount.textContent = tracks.length + ' 首';
     renderPlaylist();
   }
   function renderPlaylist() {
     trackList.replaceChildren();
-    tracks.forEach((track, i) => {
+    back.hidden = selectedGroup === null;
+    listTitle.textContent = selectedGroup === null ? '音乐分类' : groups[selectedGroup].name;
+    if (selectedGroup === null) {
+      trackCount.textContent = groups.length + ' 类';
+      groups.forEach((group, i) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'music-category';
+        const icon = document.createElement('span');
+        icon.className = 'music-category-icon';
+        icon.textContent = group.icon;
+        const name = document.createElement('span');
+        name.className = 'music-category-name';
+        name.textContent = group.name;
+        const count = document.createElement('span');
+        count.className = 'music-category-count';
+        count.textContent = group.tracks.length + ' 首';
+        const arrow = document.createElement('span');
+        arrow.className = 'music-category-arrow';
+        arrow.textContent = '›';
+        button.append(icon, name, count, arrow);
+        button.addEventListener('click', () => { selectedGroup = i; renderPlaylist(); });
+        trackList.appendChild(button);
+      });
+      return;
+    }
+    const group = groups[selectedGroup];
+    trackCount.textContent = group.tracks.length + ' 首';
+    group.tracks.forEach((track, i) => {
+      const globalIndex = tracks.indexOf(track);
       const button = document.createElement('button');
       button.type = 'button';
-      button.className = 'music-track' + (i === index ? ' active' : '');
+      button.className = 'music-track' + (globalIndex === index ? ' active' : '');
       button.setAttribute('aria-label', '选择 ' + (track.title || '未命名歌曲'));
-      if (i === index) button.setAttribute('aria-current', 'true');
+      if (globalIndex === index) button.setAttribute('aria-current', 'true');
       const number = document.createElement('span');
       number.className = 'music-track-number';
-      number.textContent = i === index ? '♫' : String(i + 1);
+      number.textContent = globalIndex === index ? '♫' : String(i + 1);
       const info = document.createElement('span');
       info.className = 'music-track-info';
       const name = document.createElement('span');
@@ -99,7 +151,7 @@
       singer.textContent = track.artist || '';
       info.append(name, singer);
       button.append(number, info);
-      button.addEventListener('click', () => selectTrack(i));
+      button.addEventListener('click', () => selectTrack(globalIndex));
       trackList.appendChild(button);
     });
   }
@@ -123,13 +175,20 @@
     updateDetails();
     loadSelected();
   }
-  function changeTrack(step) { selectTrack((index + step + tracks.length) % tracks.length); }
+  function changeTrack(step) {
+    const groupIndex = groups.findIndex(g => g.tracks.includes(tracks[index]));
+    const currentGroup = groups[groupIndex];
+    const localIndex = currentGroup.tracks.indexOf(tracks[index]);
+    const next = currentGroup.tracks[(localIndex + step + currentGroup.tracks.length) % currentGroup.tracks.length];
+    selectTrack(tracks.indexOf(next));
+  }
   function setOpen(open) {
     panel.hidden = !open;
     toggle.setAttribute('aria-expanded', String(open));
     toggle.setAttribute('aria-label', open ? '收起歌单' : '展开歌单');
     if (open && !loaded) loadSelected();
   }
+  back.addEventListener('click', () => { selectedGroup = null; renderPlaylist(); });
   toggle.addEventListener('click', () => setOpen(panel.hidden));
   document.getElementById('music-close').addEventListener('click', () => setOpen(false));
   document.getElementById('music-prev').addEventListener('click', () => changeTrack(-1));
