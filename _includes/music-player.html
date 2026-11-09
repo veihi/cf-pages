@@ -23,11 +23,10 @@
 </div>
 <script id="music-playlist" type="application/json">{{ music_tracks | jsonify }}</script>
 <style>
-.blog-music{position:relative;margin-top:14px;z-index:9999;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#263345}
-.music-footer-fallback{position:fixed;right:18px;bottom:18px;margin:0}
-.music-footer-fallback .music-panel{left:auto;right:0}
+.blog-music{position:fixed;left:18px;top:76px;z-index:9999;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#263345}
+.music-footer-note{margin:12px 0 0;color:#828b98;font-size:12px;line-height:1.7;font-weight:400}
 .music-toggle{width:52px;height:52px;border:0;border-radius:50%;background:#fff;color:#3977af;font-size:30px;box-shadow:0 5px 24px #0002;cursor:pointer}
-.music-panel{position:absolute;left:0;bottom:calc(100% + 10px);box-sizing:border-box;width:min(390px,calc(100vw - 36px));margin:0;padding:15px;background:rgba(255,255,255,.97);border:1px solid #e2e8f0;border-radius:18px;box-shadow:0 10px 35px #0002;backdrop-filter:blur(14px)}
+.music-panel{box-sizing:border-box;width:min(390px,calc(100vw - 36px));margin-top:10px;padding:15px;background:rgba(255,255,255,.97);border:1px solid #e2e8f0;border-radius:18px;box-shadow:0 10px 35px #0002;backdrop-filter:blur(14px)}
 .music-panel[hidden],.music-video [hidden]{display:none}
 .music-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
 .music-description{display:grid;gap:3px;min-width:0}.music-description strong,.music-description small{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.music-description small{color:#64748b}
@@ -58,21 +57,21 @@
 .music-track-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:500}
 .music-track-artist{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:#94a3b8}
 .music-track:focus-visible,.music-controls button:focus-visible,.music-toggle:focus-visible{outline:2px solid #3977af;outline-offset:2px}
-@media(max-width:520px){.blog-music{position:fixed;left:auto;top:auto;right:12px;bottom:12px;margin:0}.music-panel{position:absolute;left:auto;right:0;bottom:calc(100% + 10px);width:min(390px,calc(100vw - 24px));padding:12px}}
+@media(max-width:520px){.blog-music{left:auto;top:auto;right:12px;bottom:12px}.music-panel{margin-top:0;margin-bottom:10px;width:min(390px,calc(100vw - 24px));padding:12px}}
 </style>
 <script>
 (function () {
   'use strict';
   const root = document.getElementById('blog-music');
-  // Minima's right-hand footer column contains the site description.
-  // Keep the iframe outside #swup so article navigation does not stop playback.
-  const footerColumn = document.querySelector('.site-footer .footer-col-3');
-  const footerFallback = document.querySelector('.site-footer .footer-col-wrapper');
-  if (footerColumn || footerFallback) {
-    (footerColumn || footerFallback).appendChild(root);
-  } else {
-    // Unexpected theme markup: keep the widget accessible at the lower right.
-    root.classList.add('music-footer-fallback');
+  // Keep the music player fixed; only put the guidance in the footer.
+  const footerTarget = document.querySelector('.site-footer .footer-col-3')
+    || document.querySelector('.site-footer .footer-col-wrapper');
+  if (footerTarget && !document.getElementById('music-footer-note')) {
+    const note = document.createElement('p');
+    note.id = 'music-footer-note';
+    note.className = 'music-footer-note';
+    note.textContent = '♫ 请在 B站视频内点击播放；切换歌曲会重置播放进度。';
+    footerTarget.appendChild(note);
   }
   const panel = document.getElementById('music-panel');
   const toggle = document.getElementById('music-toggle');
