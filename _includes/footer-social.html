@@ -1,0 +1,23 @@
+<script>
+(function () {
+  'use strict';
+  // Minima renders the email address in the first footer column.
+  const list = document.querySelector('.site-footer .footer-col-1 .contact-list');
+  if (!list || document.getElementById('footer-social-bilibili')) return;
+  const links = [
+    { id: 'footer-social-bilibili', label: 'Bilibili · 我的主页', url: 'https://space.bilibili.com/631367902' },
+    { id: 'footer-social-douyin', label: '抖音 · 我的主页', url: 'https://v.douyin.com/Ua_1nyBq3UI/' }
+  ];
+  links.forEach(({ id, label, url }) => {
+    const item = document.createElement('li');
+    const link = document.createElement('a');
+    link.id = id;
+    link.href = url;
+    link.textContent = label;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    item.appendChild(link);
+    list.appendChild(item);
+  });
+})();
+</script>
