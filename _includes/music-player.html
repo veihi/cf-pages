@@ -16,7 +16,7 @@
       <button id="music-next" type="button" aria-label="下一首">下一首 ⏭</button>
     </div>
     <div class="music-playlist">
-      <div class="music-list-header"><button id="music-back" class="music-back" type="button" hidden aria-label="返回分类">← 返回</button><strong id="music-list-title">音乐分类</strong><span id="music-count"></span></div>
+      <div class="music-list-header"><button id="music-back" class="music-back" type="button" hidden aria-label="返回分类">← 返回</button><strong id="music-list-title">音乐分类</strong><form id="music-search-form" class="music-search-form" role="search"><input id="music-search-input" type="search" placeholder="搜索歌名" aria-label="搜索歌名" autocomplete="off"><button type="submit" aria-label="搜索歌曲">搜索</button></form><span id="music-count"></span></div>
       <div id="music-track-list" class="music-track-list" role="group" aria-label="歌曲列表"></div>
     </div>
   </section>
@@ -37,7 +37,13 @@
 .music-controls button{border:1px solid #dbeafe;border-radius:8px;padding:7px 12px;background:#eff6ff;color:#3977af;cursor:pointer}
 .music-controls button:hover{background:#dbeafe}
 .music-playlist{margin-top:13px;border-top:1px solid #e2e8f0;padding-top:12px}
-.music-list-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:13px}
+.music-list-header{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:8px;font-size:13px}
+.music-list-header strong{white-space:nowrap}
+.music-search-form{display:flex;align-items:center;gap:4px;min-width:0;flex:1;max-width:175px;margin:0}
+.music-search-form input{min-width:0;width:100%;height:27px;padding:4px 6px;border:1px solid #dbe3ed;border-radius:6px;background:#fff;color:#334155;font-size:11px;box-sizing:border-box}
+.music-search-form button{flex-shrink:0;height:27px;padding:0 7px;border:1px solid #dbeafe;border-radius:6px;background:#eff6ff;color:#3977af;font-size:11px;cursor:pointer}
+.music-search-form input:focus-visible,.music-search-form button:focus-visible{outline:2px solid #3977af;outline-offset:1px}
+.music-search-empty{padding:14px 8px;text-align:center;font-size:12px;color:#94a3b8}
 .music-list-header span{color:#94a3b8;font-size:11px}
 .music-back{border:0;background:transparent;color:#3977af;cursor:pointer;padding:3px 6px 3px 0;font-size:12px}
 .music-back[hidden]{display:none}
@@ -70,6 +76,8 @@
   const artist = document.getElementById('music-artist');
   const trackList = document.getElementById('music-track-list');
   const trackCount = document.getElementById('music-count');
+  const searchForm = document.getElementById('music-search-form');
+  const searchInput = document.getElementById('music-search-input');
   const rawGroups = JSON.parse(document.getElementById('music-playlist').textContent);
   const validTrack = t => t && /^BV[0-9A-Za-z]{10}$/.test(String(t.bvid || '')) &&
     (!t.page || (Number.isInteger(Number(t.page)) && Number(t.page) >= 1));
@@ -89,6 +97,7 @@
   const back = document.getElementById('music-back');
   const listTitle = document.getElementById('music-list-title');
   let selectedGroup = null;
+  let searchQuery = null;
   let index = 0;
   let loaded = false;
 
@@ -100,8 +109,22 @@
   }
   function renderPlaylist() {
     trackList.replaceChildren();
-    back.hidden = selectedGroup === null;
-    listTitle.textContent = selectedGroup === null ? '音乐分类' : groups[selectedGroup].name;
+    back.hidden = selectedGroup === null && searchQuery === null;
+    listTitle.textContent = searchQuery !== null ? '搜索结果' : selectedGroup === null ? '音乐分类' : groups[selectedGroup].name;
+    if (searchQuery !== null) {
+      const matches = tracks.map((track, i) => ({ track, i }))
+        .filter(({ track }) => String(track.title || '').toLocaleLowerCase().includes(searchQuery));
+      trackCount.textContent = matches.length + ' 首';
+      if (!matches.length) {
+        const empty = document.createElement('p');
+        empty.className = 'music-search-empty';
+        empty.textContent = '没有找到匹配的歌曲';
+        trackList.appendChild(empty);
+      } else {
+        matches.forEach(({ track, i }, position) => appendTrackButton(track, i, position + 1));
+      }
+      return;
+    }
     if (selectedGroup === null) {
       trackCount.textContent = groups.length + ' 类';
       groups.forEach((group, i) => {
@@ -128,29 +151,29 @@
     }
     const group = groups[selectedGroup];
     trackCount.textContent = group.tracks.length + ' 首';
-    group.tracks.forEach((track, i) => {
-      const globalIndex = tracks.indexOf(track);
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'music-track' + (globalIndex === index ? ' active' : '');
-      button.setAttribute('aria-label', '选择 ' + (track.title || '未命名歌曲'));
-      if (globalIndex === index) button.setAttribute('aria-current', 'true');
-      const number = document.createElement('span');
-      number.className = 'music-track-number';
-      number.textContent = globalIndex === index ? '♫' : String(i + 1);
-      const info = document.createElement('span');
-      info.className = 'music-track-info';
-      const name = document.createElement('span');
-      name.className = 'music-track-title';
-      name.textContent = track.title || '未命名歌曲';
-      const singer = document.createElement('span');
-      singer.className = 'music-track-artist';
-      singer.textContent = track.artist || '';
-      info.append(name, singer);
-      button.append(number, info);
-      button.addEventListener('click', () => selectTrack(globalIndex));
-      trackList.appendChild(button);
-    });
+    group.tracks.forEach((track, i) => appendTrackButton(track, tracks.indexOf(track), i + 1));
+  }
+  function appendTrackButton(track, globalIndex, numberInList) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'music-track' + (globalIndex === index ? ' active' : '');
+    button.setAttribute('aria-label', '选择 ' + (track.title || '未命名歌曲'));
+    if (globalIndex === index) button.setAttribute('aria-current', 'true');
+    const number = document.createElement('span');
+    number.className = 'music-track-number';
+    number.textContent = globalIndex === index ? '♫' : String(numberInList);
+    const info = document.createElement('span');
+    info.className = 'music-track-info';
+    const name = document.createElement('span');
+    name.className = 'music-track-title';
+    name.textContent = track.title || '未命名歌曲';
+    const singer = document.createElement('span');
+    singer.className = 'music-track-artist';
+    singer.textContent = track.artist || '';
+    info.append(name, singer);
+    button.append(number, info);
+    button.addEventListener('click', () => selectTrack(globalIndex));
+    trackList.appendChild(button);
   }
   function loadSelected() {
     const track = tracks[index];
@@ -184,7 +207,24 @@
     toggle.setAttribute('aria-label', open ? '收起歌单' : '展开歌单');
     if (open && !loaded) loadSelected();
   }
-  back.addEventListener('click', () => { selectedGroup = null; renderPlaylist(); });
+  back.addEventListener('click', () => {
+    selectedGroup = null;
+    searchQuery = null;
+    searchInput.value = '';
+    renderPlaylist();
+  });
+  searchForm.addEventListener('submit', event => {
+    event.preventDefault();
+    const query = searchInput.value.trim().toLocaleLowerCase();
+    if (!query) {
+      searchQuery = null;
+      selectedGroup = null;
+    } else {
+      searchQuery = query;
+      selectedGroup = null;
+    }
+    renderPlaylist();
+  });
   toggle.addEventListener('click', () => setOpen(panel.hidden));
   document.getElementById('music-close').addEventListener('click', () => setOpen(false));
   document.getElementById('music-prev').addEventListener('click', () => changeTrack(-1));
