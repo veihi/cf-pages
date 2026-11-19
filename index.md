@@ -4,6 +4,8 @@ layout: home
 
 欢迎来到我的网站。分享一些有趣的事情。
 
+{% comment %}
+Promotion paused. Keep the source here for a deliberate future restore.
 <style>
 /*
  * The promotion is deliberately outside the article flow.
@@ -48,3 +50,4 @@ layout: home
     referrerpolicy="strict-origin-when-cross-origin"
   ></iframe>
 </aside>
+{% endcomment %}

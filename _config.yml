@@ -5,3 +5,10 @@ description: 感谢您的阅读
 baseurl: ""
 url: "https://veihi.uk"
 theme: minima
+
+# Promotion is paused. Exclude the page even for --unpublished builds.
+# Internal handoff documents contain promotion URLs and are not public pages.
+exclude:
+  - games.md
+  - docs/
+  - AGENTS.md

@@ -2,6 +2,7 @@
 layout: page
 title: 游戏推荐
 permalink: /games/
+published: false
 ---
 
 <style>
