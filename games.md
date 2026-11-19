@@ -27,16 +27,18 @@ permalink: /games/
     <div>
       <h2 id="ark-recode-title">星陨计划 Ark Re:Code</h2>
       <p>通过我的专属分享链接了解游戏。</p>
-      <a class="game-promo-link" href="https://game.erolabshare.live/app/bb37ff57/Ark_Re_Code" target="_blank" rel="sponsored noopener noreferrer">访问游戏推广页面 ↗</a>
+      <a class="game-promo-link" href="https://game.erolabsshare.live/app/bb37ff57/Ark_Re_Code" target="_blank" rel="sponsored noopener noreferrer">访问游戏推广页面 ↗</a>
       <p class="game-promo-caption">此为专属推广链接，访问及注册行为可能计入推广统计。</p>
     </div>
     <div class="game-promo-embed" aria-label="星陨计划推广卡片">
       <iframe
         title="ERO-Labs 星陨计划 Ark Re:Code 推广卡片"
-        src="https://www.ero-labs.com/adIframe/?code=promotion&amp;lang=cn&amp;adType=4&amp;gameId=32&amp;url=https%3A%2F%2Fgame.erolabshare.live%2Fapp%2Fbb37ff57%2FArk_Re_Code&amp;type=blog"
+        src="https://www.ero-labs.com/adIframe/?code=promotion&amp;lang=cn&amp;adType=4&amp;gameId=32&amp;url=https://game.erolabsshare.live/app/bb37ff57/Ark_Re_Code&amp;type=blog"
+        width="100%"
+        height="110"
+        frameborder="0"
         loading="lazy"
         referrerpolicy="strict-origin-when-cross-origin"
-        allow="fullscreen"
       ></iframe>
     </div>
   </section>
