@@ -1,0 +1,9 @@
+# Fixed short links. Use temporary redirects so destinations can be changed later.
+/go/1 https://ys.mihoyo.com/ 302
+/go/1/ https://ys.mihoyo.com/ 302
+/go/2 https://sr.mihoyo.com/ 302
+/go/2/ https://sr.mihoyo.com/ 302
+/go/3 https://zzz.mihoyo.com/m/main 302
+/go/3/ https://zzz.mihoyo.com/m/main 302
+/go/4 https://bh3.mihoyo.com/ 302
+/go/4/ https://bh3.mihoyo.com/ 302

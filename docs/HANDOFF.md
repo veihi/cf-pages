@@ -133,3 +133,18 @@
 > 请先阅读 AGENTS.md 和 docs/HANDOFF.md，再检查当前 main 的关键实现。不要修改其他会话加入的推广链接或无关功能。先总结实际状态与交接文档的差异，再按我提出的单项需求开发，优先使用独立分支和 PR。
 
 遇到交接与代码不一致时，不要擅自恢复旧实现；先向用户说明差异并确认意图。
+
+## 9. 固定短链接（2026-11-20）
+
+用户要求将四个网址包装为本站域名的分享链接。根目录 `_redirects` 配置 Cloudflare Pages 的固定 302 跳转，同时支持以下地址末尾带 `/` 的写法：
+
+| 分享链接 | 目标地址 |
+| --- | --- |
+| `https://veihi.uk/go/1` | `https://ys.mihoyo.com/` |
+| `https://veihi.uk/go/2` | `https://sr.mihoyo.com/` |
+| `https://veihi.uk/go/3` | `https://zzz.mihoyo.com/m/main` |
+| `https://veihi.uk/go/4` | `https://bh3.mihoyo.com/` |
+
+`_config.yml` 的 `include` 显式纳入 `_redirects`，使 Jekyll 将其复制到构建输出目录，交由 Cloudflare Pages 处理。没有新增内容页或导航入口。短链接只改变点击前的分享地址；跳转后浏览器会显示目标网站域名。
+
+修改目标时编辑对应的两条规则，再完成生产部署。线上验证需检查各地址的 HTTP 状态为 302，且 `Location` 与配置一致；本地 Jekyll 服务本身不会执行 Cloudflare 的重定向规则。

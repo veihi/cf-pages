@@ -12,3 +12,7 @@ exclude:
   - games.md
   - docs/
   - AGENTS.md
+
+# Copy Cloudflare Pages routing rules into the generated site.
+include:
+  - _redirects
