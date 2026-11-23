@@ -16,6 +16,9 @@ for (const post of posts) {
 }
 const playlist = html.match(/<script id="music-playlist" type="application\/json">([\s\S]*?)<\/script>/);
 assert.deepEqual(JSON.parse(playlist[1]), music, 'Playlist differs from existing YAML');
+const contact = html.match(/<script id="site-contact" type="application\/json">([\s\S]*?)<\/script>/);
+assert.deepEqual(JSON.parse(contact[1]), { email: site.email }, 'Configured public contact email differs');
+assert.equal((html.match(/data-contact-email/g) || []).length, 4, 'Contact links must all support partial navigation');
 assert.equal(fs.readFileSync('dist/_redirects', 'utf8'), fs.readFileSync('_redirects', 'utf8'));
 assert.ok(fs.existsSync('dist/assets/ganyu.jpg'));
 assert.ok(fs.existsSync('dist/feed.xml'));
