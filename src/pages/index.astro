@@ -25,7 +25,7 @@ const trackCount = music.reduce((n, g) => n + (g.tracks?.length || 0), 0);
   </section>
   <section id="collaborate" class="collaboration section-pad">
     <div class="collab-top"><p class="eyebrow"><span>03 /</span> LET’S CONNECT</p><span class="collab-badge"><i class="status-dot"></i> OPEN FOR COLLABORATION</span></div>
-    <div class="collab-main reveal"><h2>好东西，<br />值得被<span>看见。</span></h2><div><p>产品体验、内容共创、品牌合作。<br />如果你也在认真做一些有意思的事，<br />欢迎聊聊，让它在这里产生共鸣。</p><a class="button button-primary" href={`mailto:${site.email}`}>联系我 <span aria-hidden="true">↗</span></a></div></div>
-    <div class="collab-bottom"><span>INDEPENDENT VOICE. SHARED CURIOSITY.</span><a href={`mailto:${site.email}`}>{site.email}</a></div>
+    <div class="collab-main reveal"><h2>好东西，<br />值得被<span>看见。</span></h2><div><p>产品体验、内容共创、品牌合作。<br />如果你也在认真做一些有意思的事，<br />欢迎聊聊，让它在这里产生共鸣。</p><a class="button button-primary" data-contact-email href={`mailto:${site.email}`}>联系我 <span aria-hidden="true">↗</span></a></div></div>
+    <div class="collab-bottom"><span>INDEPENDENT VOICE. SHARED CURIOSITY.</span><a data-contact-email data-contact-display href={`mailto:${site.email}`}>{site.email}</a></div>
   </section>
 </Shell>

@@ -1,8 +1,8 @@
 # 博客维护交接（Codex / ChatGPT）
 
-## 改版工作：Astro 本地预览（2026-11-23）
+## 当前生产版本：Astro（2026-11-23）
 
-`codex/astro-redesign` 分支新增 Astro 7 静态网站，设计为近黑色 + 黄绿色、中文大标题、WebGL 粒子环、文章分类筛选和独立合作入口。当前工作是本地预览，生产仍需在设计确认后切换 Cloudflare 构建配置；详细步骤见根目录 `README.md`。
+PR #16 已合并并通过 Cloudflare Pages 生产部署（代码提交 `e5cd950`）。当前使用 Astro 7 静态网站，设计为近黑色 + 黄绿色、中文大标题、WebGL 粒子环、文章分类筛选和独立合作入口。原 Pages 项目和域名不变，构建命令已切换为 `npm run build`、输出 `dist`，Node 版本由 `.node-version` 指定；详细步骤见根目录 `README.md`。
 
 - 继续读取 `_posts/`、`_config.yml` 与现有歌单；原始文章、歌曲数据及原播放器文件未改动。
 - 四篇文章沿用原来的分类 / 日期 / `.html` 路径；保留 RSS、原文章图片、页脚社交链接。
@@ -10,6 +10,12 @@
 - 之前暂停的 ERO-Labs 推广保持停用，短链接规则继续原样复制。
 - TMT 店铺、运营关系与微信企业认证是用户提供的背景，尚未核验；没有将这些背景写成对本站的认证或公开背书，也没有虚构优惠码。
 - 新增 npm 相关目录已排除在旧 Jekyll 输出之外；生产切换需要 `npm run build`、输出 `dist` 和符合 engines 的 Node 版本，不能只合并源码。
+
+### 邮箱保护与无刷新导航
+
+Cloudflare 会将 HTML 里的邮箱改写为 `/cdn-cgi/l/email-protection#...`，初次载入后由其脚本解码。但局部导航插入的 HTML 不会重新运行该脚本，因此曾出现从文章返回首页后联系入口跳到 Email Protection 提示页的问题。
+
+`src/scripts/contact.js` 在初始载入和每次 `music:navigation` 后，从布局里的 `application/json` 读取 `_config.yml` 配置的公开联系邮箱，恢复带 `data-contact-email` 标记的链接及邮箱文字。Cloudflare 不改写 script/JSON 内容，站点的邮箱保护设置保持原样。回归检查应覆盖首次载入、文章返回首页、前进/后退及合作区两处和页眉/页脚的邮箱入口。
 
 更新：2026-11-19。依据此前与用户的博客开发会话，并对当前 `main` 的关键文件进行了有限核对。**本文件不替代代码审查**。
 

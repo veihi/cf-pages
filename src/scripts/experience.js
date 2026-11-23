@@ -1,8 +1,10 @@
 import { startParticles } from './particles.js';
+import { hydrateContactLinks } from './contact.js';
 
 let cleanup = () => {};
 function initPage() {
   cleanup();
+  hydrateContactLinks();
   document.documentElement.classList.add('motion-ready');
   const observer = new IntersectionObserver(entries => {
     for (const entry of entries) if (entry.isIntersecting) {
