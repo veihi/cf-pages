@@ -1,0 +1,17 @@
+---
+import Shell from '../layouts/Shell.astro';
+import { posts, categoryNames } from '../lib/content.js';
+export function getStaticPaths() {
+  return posts.map(post => ({ params: { slug: post.url.replace(/^\//, '').replace(/\.html$/, '') }, props: { post } }));
+}
+const { post } = Astro.props;
+const next = posts[(posts.findIndex(p => p.url === post.url) + 1) % posts.length];
+---
+<Shell title={post.title} description={post.excerpt}>
+  <article class="article-shell" id="top">
+    <a href="/#archive" class="article-back">← 返回文章档案</a>
+    <header class="article-header"><p class="eyebrow">{categoryNames[post.categories[0]] || '随笔'} / FIELD NOTES</p><h1>{post.title}</h1><div class="article-meta"><time datetime={post.date}>{post.date}</time><span>{post.minutes} 分钟阅读</span><span>BY VEIHI</span></div></header>
+    <div class="prose" set:html={post.html} />
+    <div class="article-next"><span class="eyebrow">KEEP EXPLORING</span><a href={next.url}>{next.title}<span>↗</span></a></div>
+  </article>
+</Shell>
