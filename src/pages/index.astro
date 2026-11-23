@@ -1,0 +1,31 @@
+---
+import Shell from '../layouts/Shell.astro';
+import { posts, site, music, categoryNames } from '../lib/content.js';
+const trackCount = music.reduce((n, g) => n + (g.tracks?.length || 0), 0);
+---
+<Shell>
+  <section class="hero" id="top" aria-labelledby="hero-title">
+    <div class="hero-grid" aria-hidden="true"></div>
+    <div class="hero-meta"><span><i class="status-dot"></i> PERSONAL SPACE / ALWAYS CURIOUS</span><span>EST. 2026 <b>©</b></span></div>
+    <div class="hero-copy"><p class="eyebrow">VEIHI’S DIGITAL ARCHIVE</p><h1 id="hero-title">让好奇，<br /><span>不止于想象</span><em>。</em></h1><p class="hero-description">在技术与日常的交界，<br />收集灵感、声音，以及值得留下的事物。</p><a class="button button-primary" href="#archive">进入我的档案 <span aria-hidden="true">↓</span></a></div>
+    <div class="orbital-art" aria-hidden="true"><div class="orb-fallback"></div><canvas id="particle-canvas"></canvas><span class="art-coordinate coordinate-top">FIG. 001 — CURIOSITY FIELD</span><span class="art-coordinate coordinate-bottom">EXPERIMENT IN PROGRESS <i>✳</i></span><div class="orbit-label"><span class="crosshair">+</span><span>未完成，<br />也是一种状态。</span></div></div>
+    <div class="hero-bottom"><span>记录 · 探索 · 共鸣</span><a href="#archive">SCROLL TO EXPLORE <span aria-hidden="true">↓</span></a><span class="hero-index">01 / ∞</span></div>
+  </section>
+  <div class="ticker" aria-hidden="true"><div>CODE <span>✳</span> CULTURE <span>✳</span> CURIOSITY <span>✳</span> SOUND <span>✳</span> EVERYDAY <span>✳</span> CODE <span>✳</span> CULTURE <span>✳</span> CURIOSITY <span>✳</span> SOUND <span>✳</span> EVERYDAY <span>✳</span></div></div>
+  <section id="archive" class="archive section-pad">
+    <div class="section-heading reveal"><div><p class="eyebrow"><span>01 /</span> THE ARCHIVE</p><h2>一些发现，<br /><span class="muted">一些正在发生。</span></h2></div><p class="section-intro">把折腾过的技术、偶然遇到的灵感，<br />和生活里的小事，认真存档。</p></div>
+    <div class="archive-toolbar"><div class="filter-tabs" role="group" aria-label="按类别筛选文章"><button type="button" class="active" data-filter="all" aria-pressed="true">全部 <sup>{String(posts.length).padStart(2,'0')}</sup></button>{Object.entries(categoryNames).map(([key,label]) => <button type="button" data-filter={key} aria-pressed="false">{label}</button>)}</div><span class="archive-sort">NEWEST FIRST ↓</span></div>
+    <div class="post-list">{posts.map((post, index) => <a class="post-row reveal" href={post.url} data-category={post.categories.join(' ')}><span class="post-index">{String(index + 1).padStart(2,'0')}</span><div class="post-visual" data-art={post.categories[0]} aria-hidden="true">{post.categories[0] === 'guide' ? <div class="waveform">{Array.from({length:21},(_,i)=><i style={`--h:${18 + (Math.sin(i * 1.8) + 1) * 32}%`}></i>)}</div> : post.categories[0] === 'test' ? <span class="play-symbol">▷</span> : post.slug === 'thoughts1' ? <img src="/assets/ganyu.jpg" alt="" loading="lazy" /> : <span class="code-symbol">{'{ }'}</span>}</div><div class="post-copy"><span class="post-category">{categoryNames[post.categories[0]] || '随笔'} <i> / </i> {post.minutes} MIN READ</span><h3>{post.title}</h3><p>{post.excerpt}</p></div><div class="post-end"><time datetime={post.date}>{post.date.replaceAll('-','.').slice(2)}</time><span class="row-arrow" aria-hidden="true">↗</span></div></a>)}</div>
+    <p class="archive-end"><span>共 {posts.length} 篇记录</span><span>THE ARCHIVE IS STILL GROWING.</span></p>
+    <p id="filter-empty" hidden>这个分类还没有文章。</p>
+  </section>
+  <section id="about" class="about section-pad">
+    <div class="about-label"><p class="eyebrow"><span>02 /</span> BEHIND THE SCREEN</p><div class="about-monogram" aria-hidden="true">v<span>✳</span></div></div>
+    <div class="about-copy reveal"><p class="eyebrow">你好，我是 VEIHI。</p><h2>认真折腾，<br />也认真<span>享受生活。</span></h2><p>这里是我的个人档案库。写一点技术，留下一些发现，也为喜欢的音乐留一个位置。没有固定的边界，只有不断生长的兴趣。</p><div class="about-notes"><span>⌘ 技术与工具</span><span>♫ 音乐与游戏</span><span>✳ 日常与灵感</span></div><a class="text-link" href="/guide/2026/11/12/music-player-guide.html">{trackCount} 首收藏，打开我的声音世界 <span aria-hidden="true">↗</span></a></div>
+  </section>
+  <section id="collaborate" class="collaboration section-pad">
+    <div class="collab-top"><p class="eyebrow"><span>03 /</span> LET’S CONNECT</p><span class="collab-badge"><i class="status-dot"></i> OPEN FOR COLLABORATION</span></div>
+    <div class="collab-main reveal"><h2>好东西，<br />值得被<span>看见。</span></h2><div><p>产品体验、内容共创、品牌合作。<br />如果你也在认真做一些有意思的事，<br />欢迎聊聊，让它在这里产生共鸣。</p><a class="button button-primary" href={`mailto:${site.email}`}>联系我 <span aria-hidden="true">↗</span></a></div></div>
+    <div class="collab-bottom"><span>INDEPENDENT VOICE. SHARED CURIOSITY.</span><a href={`mailto:${site.email}`}>{site.email}</a></div>
+  </section>
+</Shell>

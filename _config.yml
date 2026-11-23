@@ -12,6 +12,14 @@ exclude:
   - games.md
   - docs/
   - AGENTS.md
+  # Keep the Astro preview source out of any remaining Jekyll builds.
+  - src/
+  - public/
+  - scripts/
+  - astro.config.mjs
+  - package.json
+  - package-lock.json
+  - README.md
 
 # Copy Cloudflare Pages routing rules into the generated site.
 include:
